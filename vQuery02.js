@@ -432,3 +432,102 @@ $().extend('animate',function(json,fn){
 	}
 	return this;//链式操作
 });
+/*
+*	elasticMove() 弹性运动/一个参数elasticMove(gravity)//gravity:重力/质量
+*	功能：弹性碰撞+重力运动
+*	例：$('div').elasticMove(10);
+*/
+$().extend('elasticMove',function(gravity){
+	for(var i=0;i<this.elements.length;i++){
+		elastic(this.elements[i],gravity);
+	}
+	function elastic(obj){
+		var iSpeedX = 0;
+		var iSpeedY = 0;
+		obj.onmousedown = function(ev){
+			var disX = 0;
+			var disY = 0;
+			var lastX = 0;
+			var lastY = 0;
+
+			var ev = ev || event;
+			disX = ev.clientX-obj.offsetLeft;
+			disY = ev.clientY-obj.offsetTop;
+
+
+			document.onmousemove = function(ev){
+				var ev = ev || event;
+				var l = ev.clientX-disX;
+				var t = ev.clientY-disY;
+
+				obj.style.left = l+'px';
+				obj.style.top = t+'px';
+
+				//根据移拖拽速度计算松开鼠标后物体运动速度
+				iSpeedY = t-lastY;
+				iSpeedX = l-lastX;
+				lastY = t;
+				lastX = l;
+			};
+			document.onmouseup = function(){
+					document.onmousemove = null;
+					document.onmouseup = null;
+					fn(obj);
+				};
+
+			clearInterval(obj.timer);//防止未松开鼠标自动脱落
+			
+		};
+
+
+		function fn(obj){
+			
+			clearInterval(obj.timer);
+			obj.timer=setInterval(function(){
+				iSpeedY+=gravity;//模拟重力
+				var l = obj.offsetLeft+iSpeedX;
+				var t = obj.offsetTop+iSpeedY;
+				
+				if (t>=document.documentElement.clientHeight-obj.offsetHeight) {
+					iSpeedY*=-0.8;//Y轴反向减速
+					iSpeedX*=0.8;//X轴减速
+					t=document.documentElement.clientHeight-obj.offsetHeight;//防止超过可视区底部
+				}else if (t<=0) {
+					iSpeedY*=-1;
+					iSpeedX*=0.8;
+					t=0;//防止超过可视区顶部
+				}
+				if (l>=document.documentElement.clientWidth-obj.offsetWidth) {
+					iSpeedX*=-0.8;
+					l=document.documentElement.clientWidth-obj.offsetWidth;//防止超过可视区右边
+				}else if (l<=0) {
+					iSpeedX*=-0.8;
+					l=0;//防止超过可视区左边
+				}
+				//解决速度飘移，停不下来问题
+				if (Math.abs(iSpeedY)<1) {
+					iSpeedY=0;
+				}
+				if (Math.abs(iSpeedX)<1) {
+					iSpeedX=0;
+				}
+				//停止条件
+				if (iSpeedX==0 && iSpeedY==0 && t==document.documentElement.clientHeight-obj.offsetHeight){
+					clearInterval(obj.timer);
+					//alert('stop');
+				}else {
+
+					obj.style.left = l+'px';
+					obj.style.top = t+'px';
+
+				}
+				
+				
+				//document.title =iSpeedX;//检测iSpeedX
+
+
+			},30);
+		};
+	}
+	return this;
+});
