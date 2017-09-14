@@ -531,3 +531,45 @@ $().extend('elasticMove',function(gravity){
 	}
 	return this;
 });
+
+/*
+*	$().ajax()无刷新数据传输（阿贾克斯）4个参数（模式，地址，发送数据，成功返回执行函数）
+*	模式：
+		1.'get':与 POST 相比，GET 更简单也更快，并且在大部分情况下都能用
+		2.'post':在以下情况中，请使用 POST 请求：
+					无法使用缓存文件（更新服务器上的文件或数据库）
+					向服务器发送大量数据（POST 没有数据量限制）
+					发送包含未知字符的用户输入时，POST 比 GET 更稳定也更可靠
+*/
+$().extend('ajax',function(method,url,data,success){
+
+	var xtr=null;
+	try {
+		xtr = new XMLHttpRequest();
+	} catch (e) {
+		xtr = new ActiveXObject('Microsoft.XMLHTTP');
+	}
+
+	if (method == 'get' && data) {
+		url += '?'+data;
+	}
+
+	xtr.open(method,url,true);
+	if (method == 'get') {
+		xtr.send();
+	}else {
+		xtr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+		xtr.send(data);
+	}
+
+	xtr.onreadystatechange = function(){
+	 	if(xtr.readyState==4){
+	 		if (xtr.status==200) {
+	 			success && success(xtr.responseText);
+	 		}else {
+	 		alert('出错了，erro：'+xtr.status);
+	 		}
+	 	}
+	 	
+	};
+});
